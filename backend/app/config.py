@@ -4,7 +4,12 @@ All settings loaded from environment variables via .env file
 """
 
 from pydantic_settings import BaseSettings
+from pathlib import Path
 from typing import Optional
+
+# Resolve .env from project root (SUPERNATURAL/.env)
+# config.py is at SUPERNATURAL/backend/app/config.py → 3 parents up = SUPERNATURAL/
+_ENV_FILE = Path(__file__).resolve().parent.parent.parent / ".env"
 
 
 class Settings(BaseSettings):
@@ -48,7 +53,7 @@ class Settings(BaseSettings):
     REDIS_URL: str = "redis://localhost:6379"
 
     class Config:
-        env_file = ".env"
+        env_file = str(_ENV_FILE)
         extra = "ignore"
 
 

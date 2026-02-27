@@ -1,14 +1,8 @@
 # ═══════════════════════════════════════════════════════════════════════
 # SUPERNATURAL — Render Blueprint (Infrastructure as Code)
 # Deploy with: Connect GitHub repo → Render auto-detects render.yaml
+# Database: Neon Serverless PostgreSQL (external)
 # ═══════════════════════════════════════════════════════════════════════
-
-databases:
-  - name: supernatural-db
-    plan: free
-    databaseName: supernatural
-    user: supernatural
-    region: oregon
 
 services:
   - type: web
@@ -28,11 +22,9 @@ services:
       - key: PYTHON_VERSION
         value: "3.11.9"
 
-      # ── Database (auto-linked from Render PostgreSQL) ────────────
+      # ── Database (Neon Serverless PostgreSQL) ────────────────────
       - key: DATABASE_URL
-        fromDatabase:
-          name: supernatural-db
-          property: connectionString
+        sync: false   # set in Render dashboard: postgresql://neondb_owner:...@ep-broad-brook-a8xmojj1.eastus2.azure.neon.tech/neondb?sslmode=require
 
       # ── N8N (self-hosted on Render) ──────────────────────────────
       - key: N8N_WEBHOOK_BASE_URL
