@@ -1,0 +1,49 @@
+# ── FastAPI Core ──────────────────────────────────────────────────────────────
+fastapi==0.111.0
+uvicorn[standard]==0.30.1
+python-multipart==0.0.9
+
+# ── Database ──────────────────────────────────────────────────────────────────
+sqlalchemy==2.0.30
+alembic==1.13.1
+psycopg2-binary==2.9.9   # PostgreSQL driver
+aiosqlite==0.20.0         # SQLite async (dev/testing)
+
+# ── Auth & Security ───────────────────────────────────────────────────────────
+passlib[bcrypt]==1.7.4
+PyJWT==2.8.0
+python-jose[cryptography]==3.3.0
+
+# ── Settings ──────────────────────────────────────────────────────────────────
+pydantic==2.7.1
+pydantic-settings==2.3.3
+python-dotenv==1.0.1
+
+# ── Google APIs (Meet + Calendar + Gmail) ─────────────────────────────────────
+google-auth==2.30.0
+google-auth-oauthlib==1.2.0
+google-auth-httplib2==0.2.0
+google-api-python-client==2.131.0
+
+# ── OpenAI (Quiz + Feedback AI) ────────────────────────────────────────────────
+openai==1.33.0
+
+# ── HTTP Client (N8N webhook calls) ───────────────────────────────────────────
+httpx==0.27.0
+
+# ── Templates ─────────────────────────────────────────────────────────────────
+jinja2==3.1.4
+
+# ── Redis ─────────────────────────────────────────────────────────────────────
+redis==5.0.5
+
+# ── Email ─────────────────────────────────────────────────────────────────────
+aiosmtplib==3.0.1
+email-validator==2.1.1
+
+# ── Production Server ─────────────────────────────────────────────────────────
+gunicorn==22.0.0
+
+# ── Testing ───────────────────────────────────────────────────────────────────
+pytest==8.2.2
+pytest-asyncio==0.23.7

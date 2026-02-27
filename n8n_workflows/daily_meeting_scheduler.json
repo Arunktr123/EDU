@@ -1,0 +1,118 @@
+{
+  "name": "SUPERNATURAL - Daily Meeting Scheduler",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "cronExpression": "0 7 * * *"
+        }
+      },
+      "id": "morning-cron",
+      "name": "Every Day 7AM",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1,
+      "position": [200, 300],
+      "notes": "Fires every morning at 7:00 AM UTC to send day's Meet links"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.SUPERNATURAL_API_URL }}/api/webhooks/send-daily-meets",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "options": {}
+      },
+      "id": "send-meets",
+      "name": "Send Daily Meet Links",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [450, 300],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "n8n-api-cred",
+          "name": "SUPERNATURAL API Key"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "number": [
+            {
+              "value1": "={{ $json.emails_sent }}",
+              "operation": "larger",
+              "value2": 0
+            }
+          ]
+        }
+      },
+      "id": "check-sent",
+      "name": "Emails Sent?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [700, 300]
+    },
+    {
+      "parameters": {
+        "message": "=📅 Daily Meet Links Sent!\nSessions: {{ $json.sessions_found }}\nEmails: {{ $json.emails_sent }}\nTime: {{ $now }}"
+      },
+      "id": "notify-admin",
+      "name": "Admin Notification",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 1,
+      "position": [950, 200]
+    },
+    {
+      "parameters": {
+        "rule": {
+          "cronExpression": "0 19 * * *"
+        }
+      },
+      "id": "evening-cron",
+      "name": "Every Day 7PM",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1,
+      "position": [200, 550],
+      "notes": "Fires every evening at 7:00 PM — sends 1-hour before reminder"
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "={{ $env.SUPERNATURAL_API_URL }}/api/sessions",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "options": {}
+      },
+      "id": "get-upcoming",
+      "name": "Get Tomorrow Sessions",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [450, 550],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "n8n-api-cred",
+          "name": "SUPERNATURAL API Key"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Every Day 7AM": {
+      "main": [[{ "node": "Send Daily Meet Links", "type": "main", "index": 0 }]]
+    },
+    "Send Daily Meet Links": {
+      "main": [[{ "node": "Emails Sent?", "type": "main", "index": 0 }]]
+    },
+    "Emails Sent?": {
+      "main": [
+        [{ "node": "Admin Notification", "type": "main", "index": 0 }]
+      ]
+    },
+    "Every Day 7PM": {
+      "main": [[{ "node": "Get Tomorrow Sessions", "type": "main", "index": 0 }]]
+    }
+  },
+  "settings": { "executionOrder": "v1" },
+  "tags": [{ "name": "SUPERNATURAL" }, { "name": "meetings" }, { "name": "email" }],
+  "notes": "Two triggers: 7AM sends today's Meet links to all students, 7PM fetches upcoming sessions for tomorrow reminders."
+}

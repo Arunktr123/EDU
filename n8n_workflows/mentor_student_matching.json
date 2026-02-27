@@ -1,0 +1,107 @@
+{
+  "name": "SUPERNATURAL - Mentor Student Matching",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [{ "field": "hours", "hoursInterval": 1 }]
+        }
+      },
+      "id": "cron-trigger",
+      "name": "Every Hour Trigger",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1,
+      "position": [200, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.SUPERNATURAL_API_URL }}/api/webhooks/trigger-matching",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "options": {
+          "response": { "response": { "responseFormat": "json" } }
+        }
+      },
+      "id": "call-matching-api",
+      "name": "Trigger Matching API",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [450, 300],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "n8n-api-cred",
+          "name": "SUPERNATURAL API Key"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{ $json.total_processed }}",
+              "operation": "isNotEmpty"
+            }
+          ]
+        }
+      },
+      "id": "check-results",
+      "name": "Any Matches Made?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [700, 300]
+    },
+    {
+      "parameters": {
+        "values": {
+          "string": [
+            {
+              "name": "log",
+              "value": "=✅ Matching complete: {{ $json.total_processed }} students processed at {{ $now }}"
+            }
+          ]
+        }
+      },
+      "id": "log-success",
+      "name": "Log Success",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 1,
+      "position": [950, 200]
+    },
+    {
+      "parameters": {
+        "values": {
+          "string": [
+            {
+              "name": "log",
+              "value": "=ℹ️ No unmatched students found at {{ $now }}"
+            }
+          ]
+        }
+      },
+      "id": "log-empty",
+      "name": "Log Empty",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 1,
+      "position": [950, 400]
+    }
+  ],
+  "connections": {
+    "Every Hour Trigger": {
+      "main": [[{ "node": "Trigger Matching API", "type": "main", "index": 0 }]]
+    },
+    "Trigger Matching API": {
+      "main": [[{ "node": "Any Matches Made?", "type": "main", "index": 0 }]]
+    },
+    "Any Matches Made?": {
+      "main": [
+        [{ "node": "Log Success", "type": "main", "index": 0 }],
+        [{ "node": "Log Empty",   "type": "main", "index": 0 }]
+      ]
+    }
+  },
+  "settings": { "executionOrder": "v1" },
+  "tags": [{ "name": "SUPERNATURAL" }, { "name": "matching" }],
+  "notes": "Runs every hour. Calls /api/webhooks/trigger-matching to autonomously match unmatched students with best-fit mentors based on preference scoring."
+}

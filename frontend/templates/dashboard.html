@@ -1,0 +1,265 @@
+{% extends "base.html" %}
+{% block title %}Dashboard | SUPERNATURAL{% endblock %}
+
+{% block content %}
+<div class="dashboard-container">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+        <div class="sidebar-profile">
+            <div class="avatar" id="avatar-initials">SN</div>
+            <div class="profile-info">
+                <div class="profile-name" id="profile-name">Loading...</div>
+                <div class="profile-role badge" id="profile-role">—</div>
+            </div>
+        </div>
+        <nav class="sidebar-nav">
+            <a href="#overview"    class="sidebar-link active" data-tab="overview">🏠 Overview</a>
+            <a href="#sessions"    class="sidebar-link" data-tab="sessions">📅 Sessions</a>
+            <a href="#quizzes"     class="sidebar-link" data-tab="quizzes">📊 Quizzes</a>
+            <a href="#students"    class="sidebar-link mentor-only" data-tab="students">👥 My Students</a>
+            <a href="#preferences" class="sidebar-link" data-tab="preferences">⚙️ Preferences</a>
+        </nav>
+    </aside>
+
+    <!-- Main Dashboard -->
+    <div class="dashboard-main">
+
+        <!-- Overview Tab -->
+        <div id="tab-overview" class="tab-content active">
+            <h2>Welcome Back! 👋</h2>
+            <div class="stats-row" id="stats-row">
+                <div class="mini-stat-card"><div class="msc-val" id="stat-matched">—</div><div class="msc-label">Mentor Match</div></div>
+                <div class="mini-stat-card"><div class="msc-val" id="stat-classes">—</div><div class="msc-label">Classes</div></div>
+                <div class="mini-stat-card"><div class="msc-val" id="stat-avg-score">—</div><div class="msc-label">Avg Quiz Score</div></div>
+                <div class="mini-stat-card"><div class="msc-val" id="stat-streak">—</div><div class="msc-label">Streak Days</div></div>
+            </div>
+
+            <!-- Mentor Info Card (students only) -->
+            <div id="mentor-card" class="info-card student-only" style="display:none;">
+                <h3>👨‍🏫 Your Assigned Mentor</h3>
+                <div id="mentor-details">Loading...</div>
+            </div>
+
+            <!-- Next Session Card -->
+            <div class="info-card">
+                <h3>📅 Next Class</h3>
+                <div id="next-session">Loading sessions...</div>
+            </div>
+        </div>
+
+        <!-- Sessions Tab -->
+        <div id="tab-sessions" class="tab-content" style="display:none;">
+            <div class="tab-header">
+                <h2>📅 Class Sessions</h2>
+                <button class="btn btn-primary mentor-only" id="create-session-btn" style="display:none;">
+                    + Create Session
+                </button>
+            </div>
+            <div id="sessions-list">Loading...</div>
+
+            <!-- Create Session Modal (Mentor) -->
+            <div id="session-modal" class="modal" style="display:none;">
+                <div class="modal-card">
+                    <h3>Create New Session</h3>
+                    <div class="form-group">
+                        <label>Title</label>
+                        <input type="text" id="sess-title" placeholder="e.g., Python Functions Deep Dive" />
+                    </div>
+                    <div class="form-group">
+                        <label>Subject</label>
+                        <input type="text" id="sess-subject" placeholder="Python" />
+                    </div>
+                    <div class="form-group">
+                        <label>Description</label>
+                        <textarea id="sess-desc" rows="2"></textarea>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Date & Time</label>
+                            <input type="datetime-local" id="sess-datetime" />
+                        </div>
+                        <div class="form-group">
+                            <label>Duration (mins)</label>
+                            <input type="number" id="sess-duration" value="60" />
+                        </div>
+                    </div>
+                    <div class="modal-actions">
+                        <button class="btn btn-outline" onclick="document.getElementById('session-modal').style.display='none'">Cancel</button>
+                        <button class="btn btn-primary" onclick="submitSession()">Create & Send Invites 🚀</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quizzes Tab -->
+        <div id="tab-quizzes" class="tab-content" style="display:none;">
+            <h2>📊 Quizzes & Results</h2>
+            <div id="quiz-results-list">Loading...</div>
+        </div>
+
+        <!-- Students Tab (Mentor only) -->
+        <div id="tab-students" class="tab-content mentor-only" style="display:none;">
+            <h2>👥 My Students</h2>
+            <div id="students-list">Loading...</div>
+        </div>
+
+        <!-- Preferences Tab -->
+        <div id="tab-preferences" class="tab-content" style="display:none;">
+            <h2>⚙️ Update Preferences</h2>
+            <p class="text-muted">Update anytime. AI will re-optimize matches automatically.</p>
+            <div id="prefs-form-container">Loading...</div>
+        </div>
+
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+const token  = localStorage.getItem('token');
+const role   = localStorage.getItem('role');
+
+if (!token) window.location.href = '/login';
+
+// ── Tab Navigation ──────────────────────────────────────────────────────────
+document.querySelectorAll('.sidebar-link').forEach(link => {
+    link.addEventListener('click', (e) => {
+        e.preventDefault();
+        document.querySelectorAll('.sidebar-link').forEach(l => l.classList.remove('active'));
+        document.querySelectorAll('.tab-content').forEach(t => t.style.display = 'none');
+        link.classList.add('active');
+        document.getElementById('tab-' + link.dataset.tab).style.display = 'block';
+    });
+});
+
+// ── Load Profile ─────────────────────────────────────────────────────────────
+async function loadProfile() {
+    const endpoint = role === 'mentor' ? '/api/mentors/profile' : '/api/students/profile';
+    const res = await apiFetch(endpoint);
+    const data = await res.json();
+
+    document.getElementById('profile-name').textContent = data.full_name;
+    document.getElementById('profile-role').textContent = role === 'mentor' ? '👨‍🏫 Mentor' : '🎓 Student';
+    document.getElementById('avatar-initials').textContent =
+        data.full_name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0,2);
+
+    if (role === 'student') {
+        document.getElementById('stat-matched').textContent = data.is_matched ? '✅ Matched' : '⏳ Pending';
+        document.getElementById('stat-classes').textContent = data.progress?.total_classes_attended || 0;
+        document.getElementById('stat-avg-score').textContent = (data.progress?.average_quiz_score || 0) + '%';
+        document.getElementById('stat-streak').textContent = (data.progress?.streak_days || 0) + ' days';
+
+        if (data.assigned_mentor) {
+            const m = data.assigned_mentor;
+            document.getElementById('mentor-card').style.display = 'block';
+            document.getElementById('mentor-details').innerHTML = `
+                <p><strong>${m.name}</strong></p>
+                <p>📧 ${m.email}</p>
+                <p>📚 ${(m.subjects || []).join(', ')}</p>
+            `;
+        }
+        document.querySelectorAll('.mentor-only').forEach(el => el.style.display = 'none');
+    } else {
+        document.getElementById('stat-matched').textContent = data.student_count + ' students';
+        document.querySelectorAll('.student-only').forEach(el => el.style.display = 'none');
+        document.getElementById('create-session-btn').style.display = 'inline-flex';
+    }
+}
+
+// ── Load Sessions ─────────────────────────────────────────────────────────────
+async function loadSessions() {
+    const res = await apiFetch('/api/sessions');
+    const sessions = await res.json();
+    const container = document.getElementById('sessions-list');
+
+    if (!sessions.length) {
+        container.innerHTML = '<div class="empty-state">📅 No upcoming sessions. Create one!</div>';
+        return;
+    }
+
+    container.innerHTML = sessions.map(s => `
+        <div class="session-card">
+            <div class="session-info">
+                <h4>${s.title}</h4>
+                <p>📚 ${s.subject} | ⏱ ${s.duration_minutes} mins</p>
+                <p>📅 ${new Date(s.scheduled_at).toLocaleString()}</p>
+            </div>
+            <div class="session-actions">
+                ${s.meet_link
+                    ? `<a href="${s.meet_link}" target="_blank" class="btn btn-primary btn-sm">🎥 Join Meet</a>`
+                    : '<span class="badge">Link Pending</span>'}
+                ${role==='mentor' && !s.is_quiz_generated
+                    ? `<button class="btn btn-outline btn-sm" onclick="openQuizGen(${s.id}, '${s.subject}')">📝 Gen Quiz</button>`
+                    : ''}
+            </div>
+        </div>
+    `).join('');
+
+    // First session for overview
+    if (sessions[0]) {
+        document.getElementById('next-session').innerHTML = `
+            <h4>${sessions[0].title}</h4>
+            <p>📅 ${new Date(sessions[0].scheduled_at).toLocaleString()}</p>
+            ${sessions[0].meet_link ? `<a href="${sessions[0].meet_link}" class="btn btn-primary btn-sm" target="_blank">🎥 Join Now</a>` : ''}
+        `;
+    }
+}
+
+// ── Session Create ─────────────────────────────────────────────────────────────
+document.getElementById('create-session-btn')?.addEventListener('click', () => {
+    document.getElementById('session-modal').style.display = 'flex';
+});
+
+async function submitSession() {
+    const body = {
+        title: document.getElementById('sess-title').value,
+        subject: document.getElementById('sess-subject').value,
+        description: document.getElementById('sess-desc').value,
+        scheduled_at: document.getElementById('sess-datetime').value,
+        duration_minutes: parseInt(document.getElementById('sess-duration').value),
+    };
+    const res = await apiFetch('/api/sessions', 'POST', body);
+    const data = await res.json();
+    alert(`✅ Session created!\nMeet Link: ${data.meet_link}\nStudents notified: ${data.students_notified}`);
+    document.getElementById('session-modal').style.display = 'none';
+    loadSessions();
+}
+
+// ── Quiz History ─────────────────────────────────────────────────────────────
+async function loadQuizResults() {
+    const endpoint = role === 'student' ? '/api/quizzes/results/me' : '/api/quizzes/results/me';
+    const res = await apiFetch(endpoint);
+    const results = await res.json();
+    const container = document.getElementById('quiz-results-list');
+    if (!results.length) {
+        container.innerHTML = '<div class="empty-state">📊 No quiz results yet.</div>';
+        return;
+    }
+    container.innerHTML = results.map(r => `
+        <div class="quiz-result-card">
+            <div>
+                <h4>${r.quiz_title}</h4>
+                <p style="color:#888">📚 ${r.subject} | ${new Date(r.submitted_at).toLocaleDateString()}</p>
+                <p style="color:#555;font-size:13px;">${r.ai_feedback}</p>
+            </div>
+            <div class="score-badge" style="background:${r.percentage>=70?'#28a745':r.percentage>=50?'#ffc107':'#dc3545'}">
+                ${r.percentage.toFixed(0)}%
+            </div>
+        </div>
+    `).join('');
+}
+
+function apiFetch(url, method='GET', body=null) {
+    return fetch(url, {
+        method,
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+        body: body ? JSON.stringify(body) : null,
+    });
+}
+
+// Init
+loadProfile();
+loadSessions();
+loadQuizResults();
+</script>
+{% endblock %}

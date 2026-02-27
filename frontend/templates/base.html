@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{% block title %}SUPERNATURAL{% endblock %}</title>
+    <link rel="stylesheet" href="/static/css/style.css" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+</head>
+<body>
+    <!-- ── Navigation ───────────────────────────────────────────────── -->
+    <nav class="navbar">
+        <div class="nav-brand">
+            <span class="brand-icon">⚡</span>
+            <span class="brand-name">SUPERNATURAL</span>
+        </div>
+        <div class="nav-links" id="nav-links">
+            <a href="/" class="nav-link">Home</a>
+            <a href="/dashboard" class="nav-link">Dashboard</a>
+            <a href="#" class="nav-link" id="logout-btn" style="display:none;">Logout</a>
+        </div>
+        <div class="nav-auth" id="nav-auth">
+            <a href="/login" class="btn btn-outline">Login</a>
+            <a href="/register" class="btn btn-primary">Get Started</a>
+        </div>
+    </nav>
+
+    <!-- ── Main Content ─────────────────────────────────────────────── -->
+    <main class="main-content">
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- ── Footer ───────────────────────────────────────────────────── -->
+    <footer class="footer">
+        <div class="footer-content">
+            <div>
+                <span class="brand-icon">⚡</span>
+                <strong>SUPERNATURAL</strong> — Fully Autonomous Education Platform
+            </div>
+            <div class="footer-note">
+                Powered by AI • N8N Automation • No Human Intervention Required
+            </div>
+        </div>
+    </footer>
+
+    <script src="/static/js/app.js"></script>
+    {% block scripts %}{% endblock %}
+</body>
+</html>

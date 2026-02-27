@@ -1,0 +1,75 @@
+version: "3.9"
+
+services:
+  # ── FastAPI Backend ────────────────────────────────────────────────
+  api:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: supernatural-api
+    ports:
+      - "8000:8000"
+    environment:
+      - DATABASE_URL=postgresql://supernatural:supernatural@db:5432/supernatural
+      - REDIS_URL=redis://redis:6379
+    env_file:
+      - .env
+    volumes:
+      - ./backend:/app
+      - ./frontend:/app/frontend
+      - ./credentials:/app/credentials
+    depends_on:
+      - db
+      - redis
+    restart: unless-stopped
+
+  # ── PostgreSQL Database ───────────────────────────────────────────
+  db:
+    image: postgres:15-alpine
+    container_name: supernatural-db
+    environment:
+      POSTGRES_DB:       supernatural
+      POSTGRES_USER:     supernatural
+      POSTGRES_PASSWORD: supernatural
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    restart: unless-stopped
+
+  # ── Redis (Session & Task Queue Cache) ────────────────────────────
+  redis:
+    image: redis:7-alpine
+    container_name: supernatural-redis
+    ports:
+      - "6379:6379"
+    restart: unless-stopped
+
+  # ── N8N Workflow Automation ────────────────────────────────────────
+  # N8N is self-hosted on Render: https://n8n-q7j7.onrender.com/
+  # The section below is kept for local-development reference only.
+  # In production, set SUPERNATURAL_API_URL in the Render N8N env vars
+  # to point to your deployed backend URL.
+  n8n:
+    image: n8nio/n8n:latest
+    container_name: supernatural-n8n
+    ports:
+      - "5678:5678"
+    environment:
+      - N8N_BASIC_AUTH_ACTIVE=true
+      - N8N_BASIC_AUTH_USER=admin
+      - N8N_BASIC_AUTH_PASSWORD=supernatural123
+      - N8N_HOST=localhost
+      - N8N_PORT=5678
+      - WEBHOOK_URL=https://n8n-q7j7.onrender.com
+      - SUPERNATURAL_API_URL=http://api:8000
+    volumes:
+      - n8n_data:/home/node/.n8n
+      - ./n8n_workflows:/home/node/.n8n/workflows
+    depends_on:
+      - api
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+  n8n_data:

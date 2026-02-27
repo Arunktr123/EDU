@@ -1,0 +1,63 @@
+# ═══════════════════════════════════════════════════════════════════════
+# SUPERNATURAL — Render Blueprint (Infrastructure as Code)
+# Deploy with: Connect GitHub repo → Render auto-detects render.yaml
+# ═══════════════════════════════════════════════════════════════════════
+
+databases:
+  - name: supernatural-db
+    plan: free
+    databaseName: supernatural
+    user: supernatural
+    region: oregon
+
+services:
+  - type: web
+    name: supernatural-api
+    runtime: python
+    region: oregon
+    plan: free
+    buildCommand: ./build.sh
+    startCommand: cd backend && gunicorn app.main:app -w 4 -k uvicorn.workers.UvicornWorker --bind 0.0.0.0:$PORT --timeout 120
+    healthCheckPath: /api/health
+    envVars:
+      # ── App ──────────────────────────────────────────────────────
+      - key: APP_ENV
+        value: production
+      - key: SECRET_KEY
+        generateValue: true
+      - key: PYTHON_VERSION
+        value: "3.11.9"
+
+      # ── Database (auto-linked from Render PostgreSQL) ────────────
+      - key: DATABASE_URL
+        fromDatabase:
+          name: supernatural-db
+          property: connectionString
+
+      # ── N8N (self-hosted on Render) ──────────────────────────────
+      - key: N8N_WEBHOOK_BASE_URL
+        value: https://n8n-q7j7.onrender.com/webhook
+      - key: N8N_API_KEY
+        sync: false   # set manually in Render dashboard
+
+      # ── Google OAuth / Calendar / Meet ───────────────────────────
+      - key: GOOGLE_CLIENT_ID
+        sync: false
+      - key: GOOGLE_CLIENT_SECRET
+        sync: false
+      - key: GOOGLE_REDIRECT_URI
+        sync: false   # set to https://supernatural-api.onrender.com/api/auth/google/callback
+
+      # ── Gmail SMTP ───────────────────────────────────────────────
+      - key: SMTP_USER
+        sync: false
+      - key: SMTP_PASSWORD
+        sync: false
+      - key: EMAIL_FROM
+        sync: false
+
+      # ── OpenAI ───────────────────────────────────────────────────
+      - key: OPENAI_API_KEY
+        sync: false
+      - key: OPENAI_MODEL
+        value: gpt-4o

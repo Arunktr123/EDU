@@ -1,0 +1,141 @@
+{
+  "name": "SUPERNATURAL - Quiz Automation",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "session-ended",
+        "responseMode": "responseNode"
+      },
+      "id": "session-webhook",
+      "name": "Session Ended Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [200, 300],
+      "notes": "Mentor calls this endpoint when class session ends. Payload: {session_id, topic}"
+    },
+    {
+      "parameters": {
+        "amount": 5,
+        "unit": "minutes"
+      },
+      "id": "wait-5min",
+      "name": "Wait 5 Minutes",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1,
+      "position": [450, 300],
+      "notes": "Give students 5 minutes to wrap up before quiz is sent"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.SUPERNATURAL_API_URL }}/api/webhooks/generate-quiz",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "session_id",
+              "value": "={{ $json.body.session_id }}"
+            },
+            {
+              "name": "topic",
+              "value": "={{ $json.body.topic }}"
+            }
+          ]
+        }
+      },
+      "id": "generate-quiz",
+      "name": "Generate AI Quiz",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [700, 300],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "n8n-api-cred",
+          "name": "SUPERNATURAL API Key"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ { quiz_id: $json.quiz_id, questions: $json.questions, status: 'success' } }}"
+      },
+      "id": "respond-success",
+      "name": "Respond to Mentor",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [950, 300]
+    },
+    {
+      "parameters": {
+        "rule": {
+          "cronExpression": "0 20 * * *"
+        }
+      },
+      "id": "evening-reminder",
+      "name": "Every Day 8PM",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1,
+      "position": [200, 550],
+      "notes": "Evening reminder for students who haven't completed their quiz"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.SUPERNATURAL_API_URL }}/api/webhooks/send-quiz-reminders",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "options": {}
+      },
+      "id": "send-reminders",
+      "name": "Send Quiz Reminders",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [450, 550],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "n8n-api-cred",
+          "name": "SUPERNATURAL API Key"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "values": {
+          "string": [{
+            "name": "result",
+            "value": "=Quiz reminders sent: {{ $json.reminders_sent }} at {{ $now }}"
+          }]
+        }
+      },
+      "id": "log-reminders",
+      "name": "Log Reminders",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 1,
+      "position": [700, 550]
+    }
+  ],
+  "connections": {
+    "Session Ended Webhook": {
+      "main": [[{ "node": "Wait 5 Minutes", "type": "main", "index": 0 }]]
+    },
+    "Wait 5 Minutes": {
+      "main": [[{ "node": "Generate AI Quiz", "type": "main", "index": 0 }]]
+    },
+    "Generate AI Quiz": {
+      "main": [[{ "node": "Respond to Mentor", "type": "main", "index": 0 }]]
+    },
+    "Every Day 8PM": {
+      "main": [[{ "node": "Send Quiz Reminders", "type": "main", "index": 0 }]]
+    },
+    "Send Quiz Reminders": {
+      "main": [[{ "node": "Log Reminders", "type": "main", "index": 0 }]]
+    }
+  },
+  "settings": { "executionOrder": "v1" },
+  "tags": [{ "name": "SUPERNATURAL" }, { "name": "quiz" }, { "name": "ai" }],
+  "notes": "Two flows: 1) Mentor signals session ended → wait 5 min → AI generates quiz → notify students. 2) 8PM daily reminder to students with pending quizzes."
+}

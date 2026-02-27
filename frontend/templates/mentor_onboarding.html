@@ -1,0 +1,175 @@
+{% extends "base.html" %}
+{% block title %}Mentor Onboarding | SUPERNATURAL{% endblock %}
+
+{% block content %}
+<div class="onboarding-container">
+    <div class="onboarding-card">
+        <div class="onboarding-header">
+            <div class="onboarding-icon">👨‍🏫</div>
+            <h1>Mentor Onboarding</h1>
+            <p>Set your teaching preferences. The platform will automatically match students to you.</p>
+        </div>
+
+        <form id="mentor-form" class="pref-form">
+            <!-- Personal Info -->
+            <div class="form-section">
+                <h3>📋 Basic Information</h3>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Full Name</label>
+                        <input type="text" id="full_name" placeholder="Your full name" required />
+                    </div>
+                    <div class="form-group">
+                        <label>Email</label>
+                        <input type="email" id="email" placeholder="your@email.com" required />
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Password</label>
+                        <input type="password" id="password" placeholder="Create password" required />
+                    </div>
+                    <div class="form-group">
+                        <label>Max Students</label>
+                        <input type="number" id="max_students" value="5" min="1" max="20" />
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Bio / About You</label>
+                    <textarea id="bio" rows="3" placeholder="Brief description of your experience and background..."></textarea>
+                </div>
+            </div>
+
+            <!-- Teaching Preferences -->
+            <div class="form-section">
+                <h3>🎓 Teaching Preferences</h3>
+
+                <div class="form-group">
+                    <label>Subjects You Teach</label>
+                    <div class="chip-selector" id="subjects">
+                        <div class="chip" data-value="Python">Python</div>
+                        <div class="chip" data-value="Machine Learning">Machine Learning</div>
+                        <div class="chip" data-value="Data Science">Data Science</div>
+                        <div class="chip" data-value="Web Development">Web Development</div>
+                        <div class="chip" data-value="JavaScript">JavaScript</div>
+                        <div class="chip" data-value="Deep Learning">Deep Learning</div>
+                        <div class="chip" data-value="Cloud Computing">Cloud Computing</div>
+                        <div class="chip" data-value="DevOps">DevOps</div>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Expertise Level</label>
+                        <select id="expertise_level">
+                            <option value="intermediate">📈 Intermediate</option>
+                            <option value="expert" selected>🏆 Expert</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Teaching Style</label>
+                        <select id="teaching_style">
+                            <option value="interactive" selected>💬 Interactive</option>
+                            <option value="lecture">📖 Lecture-based</option>
+                            <option value="project-based">🛠 Project-based</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Preferred Session Time</label>
+                        <select id="preferred_time">
+                            <option value="morning">🌅 Morning</option>
+                            <option value="afternoon">☀️ Afternoon</option>
+                            <option value="evening" selected>🌙 Evening</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Language</label>
+                        <select id="language">
+                            <option value="English" selected>🇬🇧 English</option>
+                            <option value="Tamil">Tamil</option>
+                            <option value="Hindi">Hindi</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Available Days</label>
+                    <div class="chip-selector" id="available_days">
+                        <div class="chip" data-value="Monday">Mon</div>
+                        <div class="chip" data-value="Tuesday">Tue</div>
+                        <div class="chip" data-value="Wednesday">Wed</div>
+                        <div class="chip" data-value="Thursday">Thu</div>
+                        <div class="chip" data-value="Friday">Fri</div>
+                        <div class="chip" data-value="Saturday">Sat</div>
+                        <div class="chip" data-value="Sunday">Sun</div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="form-error" class="alert alert-error" style="display:none;"></div>
+            <div id="form-success" class="alert alert-success" style="display:none;"></div>
+
+            <button type="submit" class="btn btn-primary btn-full">
+                🚀 Register as Mentor
+            </button>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.getElementById('mentor-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const subjects = [...document.querySelectorAll('#subjects .chip.active')].map(c => c.dataset.value);
+    const days = [...document.querySelectorAll('#available_days .chip.active')].map(c => c.dataset.value);
+
+    const regRes = await fetch('/api/auth/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            email: document.getElementById('email').value,
+            full_name: document.getElementById('full_name').value,
+            password: document.getElementById('password').value,
+            role: 'mentor'
+        })
+    });
+
+    if (!regRes.ok) {
+        const err = await regRes.json();
+        document.getElementById('form-error').textContent = err.detail;
+        document.getElementById('form-error').style.display = 'block';
+        return;
+    }
+
+    const loginForm = new FormData();
+    loginForm.append('username', document.getElementById('email').value);
+    loginForm.append('password', document.getElementById('password').value);
+    const loginRes = await fetch('/api/auth/login', { method: 'POST', body: loginForm });
+    const loginData = await loginRes.json();
+    localStorage.setItem('token', loginData.access_token);
+    localStorage.setItem('role', 'mentor');
+
+    await fetch('/api/mentors/preferences', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${loginData.access_token}` },
+        body: JSON.stringify({
+            subjects, expertise_level: document.getElementById('expertise_level').value,
+            teaching_style: document.getElementById('teaching_style').value,
+            max_students: parseInt(document.getElementById('max_students').value),
+            preferred_time: document.getElementById('preferred_time').value,
+            available_days: days,
+            language: document.getElementById('language').value,
+            bio: document.getElementById('bio').value
+        })
+    });
+
+    document.getElementById('form-success').textContent = '✅ Registered! Students will be matched to you automatically.';
+    document.getElementById('form-success').style.display = 'block';
+    setTimeout(() => window.location.href = '/dashboard', 2000);
+});
+</script>
+{% endblock %}

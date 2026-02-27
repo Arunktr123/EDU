@@ -1,0 +1,30 @@
+# Environments
+.env
+venv/
+__pycache__/
+*.pyc
+*.pyo
+.pytest_cache/
+
+# Database
+*.db
+*.sqlite3
+
+# Google credentials (NEVER commit)
+credentials/google_credentials.json
+credentials/token.json
+
+# Docker
+.docker/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+
+# Logs
+*.log
+logs/
