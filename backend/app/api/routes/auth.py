@@ -136,21 +136,45 @@ def get_me(current_user: User = Depends(get_current_user)):
     }
 
 
+# ── Google OAuth Helpers ──────────────────────────────────────────────────────
+def _get_google_client_config() -> dict:
+    """Load Google OAuth client config from env var or file.
+
+    On Render (production), set GOOGLE_CREDENTIALS_JSON env var with the full
+    contents of google_credentials.json.  Locally, the file is used directly.
+    """
+    # 1. Try env var first (Render / production)
+    json_str = settings.GOOGLE_CREDENTIALS_JSON
+    if json_str:
+        try:
+            return json.loads(json_str)
+        except json.JSONDecodeError as exc:
+            raise HTTPException(
+                status_code=500,
+                detail=f"GOOGLE_CREDENTIALS_JSON env var contains invalid JSON: {exc}",
+            )
+
+    # 2. Fall back to file (local development)
+    creds_file = settings.GOOGLE_CALENDAR_CREDENTIALS_FILE
+    if os.path.exists(creds_file):
+        with open(creds_file) as f:
+            return json.load(f)
+
+    raise HTTPException(
+        status_code=500,
+        detail="Google credentials not found. Either set the GOOGLE_CREDENTIALS_JSON "
+               "env var (for Render) or place google_credentials.json in credentials/.",
+    )
+
+
 # ── Google OAuth (Calendar/Meet) ─────────────────────────────────────────────
 @router.get("/google/login")
 def google_login():
     """Redirect user to Google consent screen to authorize Calendar access."""
-    creds_file = settings.GOOGLE_CALENDAR_CREDENTIALS_FILE
-    if not os.path.exists(creds_file):
-        raise HTTPException(
-            status_code=500,
-            detail=f"Google credentials file not found at '{creds_file}'. "
-                   f"Download your OAuth client JSON from Google Cloud Console "
-                   f"and save it there.",
-        )
+    client_config = _get_google_client_config()
 
-    flow = Flow.from_client_secrets_file(
-        creds_file,
+    flow = Flow.from_client_config(
+        client_config,
         scopes=GOOGLE_SCOPES,
         redirect_uri=settings.GOOGLE_REDIRECT_URI,
     )
@@ -170,12 +194,10 @@ def google_callback(code: str = None, error: str = None):
     if not code:
         raise HTTPException(status_code=400, detail="Missing authorization code")
 
-    creds_file = settings.GOOGLE_CALENDAR_CREDENTIALS_FILE
-    if not os.path.exists(creds_file):
-        raise HTTPException(status_code=500, detail="Google credentials file not found")
+    client_config = _get_google_client_config()
 
-    flow = Flow.from_client_secrets_file(
-        creds_file,
+    flow = Flow.from_client_config(
+        client_config,
         scopes=GOOGLE_SCOPES,
         redirect_uri=settings.GOOGLE_REDIRECT_URI,
     )

@@ -49,6 +49,10 @@ class Settings(BaseSettings):
     N8N_WEBHOOK_BASE_URL: str = "https://n8n-q7j7.onrender.com/webhook"
     N8N_API_KEY: str = ""
 
+    # ── Google Credentials JSON (for Render / environments without the file) ─
+    # Paste the entire contents of google_credentials.json as one line
+    GOOGLE_CREDENTIALS_JSON: str = ""
+
     # ── Redis (for task queuing) ───────────────────────────────────────────
     REDIS_URL: str = "redis://localhost:6379"
 
