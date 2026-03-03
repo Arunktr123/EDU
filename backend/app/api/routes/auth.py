@@ -3,8 +3,13 @@ SUPERNATURAL - Authentication Routes
 JWT-based register & login for mentors and students
 """
 
+import os
+import json
+import logging
+
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
+from fastapi.responses import RedirectResponse
 from sqlalchemy.orm import Session
 from datetime import datetime, timedelta
 from typing import Optional
@@ -12,11 +17,22 @@ import jwt
 from passlib.context import CryptContext
 from pydantic import BaseModel, EmailStr
 
+from google_auth_oauthlib.flow import Flow
+from google.oauth2.credentials import Credentials
+
 from app.database import get_db
 from app.models.user import User, UserRole
 from app.models.mentor import Mentor
 from app.models.student import Student
 from app.config import settings
+
+logger = logging.getLogger(__name__)
+
+# Google OAuth scopes for Calendar/Meet
+GOOGLE_SCOPES = [
+    "https://www.googleapis.com/auth/calendar",
+    "https://www.googleapis.com/auth/calendar.events",
+]
 
 router = APIRouter()
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
@@ -117,4 +133,64 @@ def get_me(current_user: User = Depends(get_current_user)):
         "full_name": current_user.full_name,
         "role": current_user.role,
         "is_active": current_user.is_active,
+    }
+
+
+# ── Google OAuth (Calendar/Meet) ─────────────────────────────────────────────
+@router.get("/google/login")
+def google_login():
+    """Redirect user to Google consent screen to authorize Calendar access."""
+    creds_file = settings.GOOGLE_CALENDAR_CREDENTIALS_FILE
+    if not os.path.exists(creds_file):
+        raise HTTPException(
+            status_code=500,
+            detail=f"Google credentials file not found at '{creds_file}'. "
+                   f"Download your OAuth client JSON from Google Cloud Console "
+                   f"and save it there.",
+        )
+
+    flow = Flow.from_client_secrets_file(
+        creds_file,
+        scopes=GOOGLE_SCOPES,
+        redirect_uri=settings.GOOGLE_REDIRECT_URI,
+    )
+    authorization_url, _state = flow.authorization_url(
+        access_type="offline",
+        include_granted_scopes="true",
+        prompt="consent",
+    )
+    return RedirectResponse(authorization_url)
+
+
+@router.get("/google/callback")
+def google_callback(code: str = None, error: str = None):
+    """Handle Google OAuth callback — exchange code for tokens and save token.json."""
+    if error:
+        raise HTTPException(status_code=400, detail=f"Google OAuth error: {error}")
+    if not code:
+        raise HTTPException(status_code=400, detail="Missing authorization code")
+
+    creds_file = settings.GOOGLE_CALENDAR_CREDENTIALS_FILE
+    if not os.path.exists(creds_file):
+        raise HTTPException(status_code=500, detail="Google credentials file not found")
+
+    flow = Flow.from_client_secrets_file(
+        creds_file,
+        scopes=GOOGLE_SCOPES,
+        redirect_uri=settings.GOOGLE_REDIRECT_URI,
+    )
+    flow.fetch_token(code=code)
+    creds = flow.credentials
+
+    # Save token.json
+    token_path = settings.GOOGLE_TOKEN_FILE
+    os.makedirs(os.path.dirname(token_path) if os.path.dirname(token_path) else ".", exist_ok=True)
+    with open(token_path, "w") as f:
+        f.write(creds.to_json())
+
+    logger.info(f"✅ Google token saved to {token_path}")
+    return {
+        "status": "success",
+        "message": "Google Calendar authorized! token.json has been saved.",
+        "token_file": token_path,
     }

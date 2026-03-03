@@ -4,12 +4,16 @@ Main FastAPI Application Entry Point
 """
 
 from pathlib import Path
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, Request, Query
 from fastapi.staticfiles import StaticFiles
+from fastapi.responses import RedirectResponse
 from fastapi.templating import Jinja2Templates
 from fastapi.middleware.cors import CORSMiddleware
-from contextlib import asynccontextmanager
+from contextlib import asynccontextmanager, contextmanager
+import os
 import uvicorn
+
+from sqlalchemy.exc import OperationalError
 
 from app.database import engine, Base
 from app.api.routes import auth, mentors, students, sessions, quizzes, webhooks
@@ -20,10 +24,46 @@ BASE_DIR = Path(__file__).resolve().parent.parent.parent  # SUPERNATURAL/
 FRONTEND_DIR = BASE_DIR / "frontend"
 
 
+@contextmanager
+def _startup_db_lock():
+    """Serialize DB initialization across multiple Gunicorn workers.
+
+    On Render, Gunicorn starts multiple worker processes. If each worker runs
+    `Base.metadata.create_all()` concurrently, SQLite (and sometimes other DBs)
+    can error with "table already exists" due to a race.
+    """
+
+    lock_path = os.environ.get("SUPERNATURAL_STARTUP_LOCK_PATH", "/tmp/supernatural_startup.lock")
+
+    try:
+        import fcntl  # type: ignore
+    except Exception:
+        # Windows / environments without fcntl: best-effort (usually single-process dev).
+        yield
+        return
+
+    os.makedirs(os.path.dirname(lock_path), exist_ok=True)
+    with open(lock_path, "w", encoding="utf-8") as lock_file:
+        fcntl.flock(lock_file.fileno(), fcntl.LOCK_EX)
+        try:
+            yield
+        finally:
+            fcntl.flock(lock_file.fileno(), fcntl.LOCK_UN)
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Initialize DB tables on startup."""
-    Base.metadata.create_all(bind=engine)
+    with _startup_db_lock():
+        try:
+            Base.metadata.create_all(bind=engine)
+        except OperationalError as exc:
+            # Defensive: if a concurrent startup already created tables, ignore.
+            msg = str(exc).lower()
+            if "already exists" in msg:
+                pass
+            else:
+                raise
     print("✅ SUPERNATURAL Platform started successfully!")
     yield
     print("🛑 SUPERNATURAL Platform shutting down...")
@@ -61,6 +101,13 @@ app.include_router(webhooks.router,  prefix="/api/webhooks",   tags=["N8N Webhoo
 @app.get("/")
 async def index(request: Request):
     return templates.TemplateResponse("index.html", {"request": request})
+
+
+@app.get("/register")
+async def register(request: Request, role: str = Query("student")):
+    if role == "mentor":
+        return templates.TemplateResponse("mentor_onboarding.html", {"request": request})
+    return templates.TemplateResponse("student_onboarding.html", {"request": request})
 
 
 @app.get("/register/student")
