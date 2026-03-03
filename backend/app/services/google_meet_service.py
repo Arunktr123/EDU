@@ -40,30 +40,44 @@ class GoogleMeetService:
         """Authenticate via OAuth2 and build Calendar service."""
         creds = None
         token_file = settings.GOOGLE_TOKEN_FILE
-        creds_file = settings.GOOGLE_CALENDAR_CREDENTIALS_FILE
 
-        # Load saved token
-        if os.path.exists(token_file):
+        # 1. Try GOOGLE_TOKEN_JSON env var first (Render / production)
+        token_json_str = getattr(settings, "GOOGLE_TOKEN_JSON", "")
+        if token_json_str:
+            try:
+                token_data = json.loads(token_json_str)
+                creds = Credentials.from_authorized_user_info(token_data, SCOPES)
+            except Exception as exc:
+                logger.warning(f"Failed to load GOOGLE_TOKEN_JSON: {exc}")
+
+        # 2. Fall back to token file (local development)
+        if not creds and os.path.exists(token_file):
             creds = Credentials.from_authorized_user_file(token_file, SCOPES)
 
-        # Refresh or re-authenticate
-        if not creds or not creds.valid:
-            if creds and creds.expired and creds.refresh_token:
+        # 3. Refresh expired token
+        if creds and creds.expired and creds.refresh_token:
+            try:
                 creds.refresh(Request())
-            else:
-                if not os.path.exists(creds_file):
-                    logger.warning(
-                        "Google credentials file not found. "
-                        "Meet links will be mocked in development."
-                    )
-                    return
-                flow = InstalledAppFlow.from_client_secrets_file(creds_file, SCOPES)
-                creds = flow.run_local_server(port=0)
+            except Exception as exc:
+                logger.warning(f"Token refresh failed: {exc}")
+                creds = None
 
-            # Save token for future runs
-            os.makedirs(os.path.dirname(token_file), exist_ok=True)
+        # 4. No valid creds — fall back to mock links
+        if not creds or not creds.valid:
+            logger.warning(
+                "No valid Google token found. "
+                "Run /api/auth/google/login to authorize, then set GOOGLE_TOKEN_JSON. "
+                "Meet links will be mocked."
+            )
+            return
+
+        # Persist refreshed token to disk when possible
+        try:
+            os.makedirs(os.path.dirname(token_file) if os.path.dirname(token_file) else ".", exist_ok=True)
             with open(token_file, "w") as f:
                 f.write(creds.to_json())
+        except OSError:
+            pass  # ephemeral filesystem on Render — ignore
 
         try:
             self.service = build("calendar", "v3", credentials=creds)

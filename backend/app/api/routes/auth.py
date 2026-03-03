@@ -187,32 +187,54 @@ def google_login():
 
 
 @router.get("/google/callback")
-def google_callback(code: str = None, error: str = None):
+def google_callback(code: str = None, error: str = None, state: str = None):
     """Handle Google OAuth callback — exchange code for tokens and save token.json."""
     if error:
         raise HTTPException(status_code=400, detail=f"Google OAuth error: {error}")
     if not code:
         raise HTTPException(status_code=400, detail="Missing authorization code")
 
-    client_config = _get_google_client_config()
+    try:
+        client_config = _get_google_client_config()
 
-    flow = Flow.from_client_config(
-        client_config,
-        scopes=GOOGLE_SCOPES,
-        redirect_uri=settings.GOOGLE_REDIRECT_URI,
-    )
-    flow.fetch_token(code=code)
-    creds = flow.credentials
+        flow = Flow.from_client_config(
+            client_config,
+            scopes=GOOGLE_SCOPES,
+            redirect_uri=settings.GOOGLE_REDIRECT_URI,
+        )
+        flow.fetch_token(code=code)
+        creds = flow.credentials
+    except Exception as exc:
+        logger.error(f"Google token exchange failed: {exc}", exc_info=True)
+        raise HTTPException(
+            status_code=500,
+            detail=f"Google token exchange failed: {exc}",
+        )
 
-    # Save token.json
+    # Serialise token so it can be saved / returned
+    token_json_str = creds.to_json()
+
+    # Try saving token.json to disk (works locally, may be ephemeral on Render)
     token_path = settings.GOOGLE_TOKEN_FILE
-    os.makedirs(os.path.dirname(token_path) if os.path.dirname(token_path) else ".", exist_ok=True)
-    with open(token_path, "w") as f:
-        f.write(creds.to_json())
+    try:
+        os.makedirs(
+            os.path.dirname(token_path) if os.path.dirname(token_path) else ".",
+            exist_ok=True,
+        )
+        with open(token_path, "w") as f:
+            f.write(token_json_str)
+        logger.info(f"✅ Google token saved to {token_path}")
+    except OSError as exc:
+        logger.warning(f"Could not write token file ({exc}). Return token in response instead.")
 
-    logger.info(f"✅ Google token saved to {token_path}")
+    # Always return the token JSON so the user can store it as GOOGLE_TOKEN_JSON env var
     return {
         "status": "success",
-        "message": "Google Calendar authorized! token.json has been saved.",
+        "message": (
+            "Google Calendar authorized! Copy the 'token_json' value below "
+            "and set it as the GOOGLE_TOKEN_JSON environment variable on Render "
+            "so the token persists across deploys."
+        ),
         "token_file": token_path,
+        "token_json": json.loads(token_json_str),
     }

@@ -52,6 +52,9 @@ class Settings(BaseSettings):
     # ── Google Credentials JSON (for Render / environments without the file) ─
     # Paste the entire contents of google_credentials.json as one line
     GOOGLE_CREDENTIALS_JSON: str = ""
+    # ── Google Token JSON (auto-set after successful OAuth on Render) ─
+    # Copy the token JSON returned by /api/auth/google/callback and set as env var
+    GOOGLE_TOKEN_JSON: str = ""
 
     # ── Redis (for task queuing) ───────────────────────────────────────────
     REDIS_URL: str = "redis://localhost:6379"
