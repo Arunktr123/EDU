@@ -195,6 +195,10 @@ def google_callback(code: str = None, error: str = None, state: str = None):
         raise HTTPException(status_code=400, detail="Missing authorization code")
 
     try:
+        # Google may return more scopes than requested (incremental auth).
+        # Tell oauthlib to accept the wider set instead of raising.
+        os.environ["OAUTHLIB_RELAX_TOKEN_SCOPE"] = "1"
+
         client_config = _get_google_client_config()
 
         flow = Flow.from_client_config(
