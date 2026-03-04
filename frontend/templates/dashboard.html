@@ -3,21 +3,17 @@
 
 {% block content %}
 <div class="dashboard-container">
-    <!-- Sidebar -->
+    <!-- Compact Icon Sidebar -->
     <aside class="sidebar">
         <div class="sidebar-profile">
             <div class="avatar" id="avatar-initials">SN</div>
-            <div class="profile-info">
-                <div class="profile-name" id="profile-name">Loading...</div>
-                <div class="profile-role badge" id="profile-role">—</div>
-            </div>
         </div>
         <nav class="sidebar-nav">
-            <a href="#overview"    class="sidebar-link active" data-tab="overview">🏠 Overview</a>
-            <a href="#sessions"    class="sidebar-link" data-tab="sessions">📅 Sessions</a>
-            <a href="#quizzes"     class="sidebar-link" data-tab="quizzes">📊 Quizzes</a>
-            <a href="#students"    class="sidebar-link mentor-only" data-tab="students">👥 My Students</a>
-            <a href="#preferences" class="sidebar-link" data-tab="preferences">⚙️ Preferences</a>
+            <a href="#overview"    class="sidebar-link active" data-tab="overview" title="Overview">🏠<span class="sidebar-link-text">Overview</span></a>
+            <a href="#sessions"    class="sidebar-link" data-tab="sessions" title="Sessions">📅<span class="sidebar-link-text">Sessions</span></a>
+            <a href="#quizzes"     class="sidebar-link" data-tab="quizzes" title="Quizzes">📊<span class="sidebar-link-text">Quizzes</span></a>
+            <a href="#students"    class="sidebar-link mentor-only" data-tab="students" title="Students">👥<span class="sidebar-link-text">Students</span></a>
+            <a href="#preferences" class="sidebar-link" data-tab="preferences" title="Settings">⚙️<span class="sidebar-link-text">Settings</span></a>
         </nav>
     </aside>
 
@@ -26,12 +22,34 @@
 
         <!-- Overview Tab -->
         <div id="tab-overview" class="tab-content active">
-            <h2>Welcome Back! 👋</h2>
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:24px;">
+                <div>
+                    <h2 style="margin-bottom:4px;">Welcome Back! 👋</h2>
+                    <p class="text-muted" id="profile-name-greeting">Good to see you again</p>
+                </div>
+                <div style="display:flex;align-items:center;gap:12px;">
+                    <span class="badge" id="profile-role">—</span>
+                    <span style="font-weight:600;font-size:.95rem;" id="profile-name">Loading...</span>
+                </div>
+            </div>
+
             <div class="stats-row" id="stats-row">
-                <div class="mini-stat-card"><div class="msc-val" id="stat-matched">—</div><div class="msc-label">Mentor Match</div></div>
-                <div class="mini-stat-card"><div class="msc-val" id="stat-classes">—</div><div class="msc-label">Classes</div></div>
-                <div class="mini-stat-card"><div class="msc-val" id="stat-avg-score">—</div><div class="msc-label">Avg Quiz Score</div></div>
-                <div class="mini-stat-card"><div class="msc-val" id="stat-streak">—</div><div class="msc-label">Streak Days</div></div>
+                <div class="mini-stat-card">
+                    <div class="msc-val" id="stat-matched">—</div>
+                    <div class="msc-label">Mentor Match</div>
+                </div>
+                <div class="mini-stat-card">
+                    <div class="msc-val" id="stat-classes">—</div>
+                    <div class="msc-label">Classes</div>
+                </div>
+                <div class="mini-stat-card">
+                    <div class="msc-val" id="stat-avg-score">—</div>
+                    <div class="msc-label">Avg Quiz Score</div>
+                </div>
+                <div class="mini-stat-card">
+                    <div class="msc-val" id="stat-streak">—</div>
+                    <div class="msc-label">Streak Days</div>
+                </div>
             </div>
 
             <!-- Mentor Info Card (students only) -->
@@ -51,7 +69,7 @@
         <div id="tab-sessions" class="tab-content" style="display:none;">
             <div class="tab-header">
                 <h2>📅 Class Sessions</h2>
-                <button class="btn btn-primary mentor-only" id="create-session-btn" style="display:none;">
+                <button class="btn btn-coral mentor-only" id="create-session-btn" style="display:none;">
                     + Create Session
                 </button>
             </div>
@@ -85,7 +103,7 @@
                     </div>
                     <div class="modal-actions">
                         <button class="btn btn-outline" onclick="document.getElementById('session-modal').style.display='none'">Cancel</button>
-                        <button class="btn btn-primary" onclick="submitSession()">Create & Send Invites 🚀</button>
+                        <button class="btn btn-coral" onclick="submitSession()">Create & Send Invites 🚀</button>
                     </div>
                 </div>
             </div>
@@ -116,9 +134,6 @@
 
 {% block scripts %}
 <script>
-const token  = localStorage.getItem('token');
-const role   = localStorage.getItem('role');
-
 if (!token) window.location.href = '/login';
 
 // ── Tab Navigation ──────────────────────────────────────────────────────────
@@ -138,7 +153,9 @@ async function loadProfile() {
     const res = await apiFetch(endpoint);
     const data = await res.json();
 
+    const firstName = data.full_name.split(' ')[0];
     document.getElementById('profile-name').textContent = data.full_name;
+    document.getElementById('profile-name-greeting').textContent = `Good to see you, ${firstName}`;
     document.getElementById('profile-role').textContent = role === 'mentor' ? '👨‍🏫 Mentor' : '🎓 Student';
     document.getElementById('avatar-initials').textContent =
         data.full_name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0,2);
@@ -181,12 +198,12 @@ async function loadSessions() {
         <div class="session-card">
             <div class="session-info">
                 <h4>${s.title}</h4>
-                <p>📚 ${s.subject} | ⏱ ${s.duration_minutes} mins</p>
-                <p>📅 ${new Date(s.scheduled_at).toLocaleString()}</p>
+                <p class="text-muted">📚 ${s.subject} &nbsp;|&nbsp; ⏱ ${s.duration_minutes} mins</p>
+                <p class="text-muted">📅 ${new Date(s.scheduled_at).toLocaleString()}</p>
             </div>
             <div class="session-actions">
                 ${s.meet_link
-                    ? `<a href="${s.meet_link}" target="_blank" class="btn btn-primary btn-sm">🎥 Join Meet</a>`
+                    ? `<a href="${s.meet_link}" target="_blank" class="btn btn-coral btn-sm">🎥 Join Meet</a>`
                     : '<span class="badge">Link Pending</span>'}
                 ${role==='mentor' && !s.is_quiz_generated
                     ? `<button class="btn btn-outline btn-sm" onclick="openQuizGen(${s.id}, '${s.subject}')">📝 Gen Quiz</button>`
@@ -199,8 +216,8 @@ async function loadSessions() {
     if (sessions[0]) {
         document.getElementById('next-session').innerHTML = `
             <h4>${sessions[0].title}</h4>
-            <p>📅 ${new Date(sessions[0].scheduled_at).toLocaleString()}</p>
-            ${sessions[0].meet_link ? `<a href="${sessions[0].meet_link}" class="btn btn-primary btn-sm" target="_blank">🎥 Join Now</a>` : ''}
+            <p class="text-muted">📅 ${new Date(sessions[0].scheduled_at).toLocaleString()}</p>
+            ${sessions[0].meet_link ? `<a href="${sessions[0].meet_link}" class="btn btn-coral btn-sm" target="_blank">🎥 Join Now</a>` : ''}
         `;
     }
 }
@@ -239,22 +256,14 @@ async function loadQuizResults() {
         <div class="quiz-result-card">
             <div>
                 <h4>${r.quiz_title}</h4>
-                <p style="color:#888">📚 ${r.subject} | ${new Date(r.submitted_at).toLocaleDateString()}</p>
-                <p style="color:#555;font-size:13px;">${r.ai_feedback}</p>
+                <p class="text-muted">📚 ${r.subject} | ${new Date(r.submitted_at).toLocaleDateString()}</p>
+                <p style="font-size:.85rem;color:var(--text-muted);margin-top:6px;">${r.ai_feedback}</p>
             </div>
-            <div class="score-badge" style="background:${r.percentage>=70?'#28a745':r.percentage>=50?'#ffc107':'#dc3545'}">
+            <div class="score-badge" style="background:${r.percentage>=70?'var(--success)':r.percentage>=50?'var(--warning)':'var(--danger)'}">
                 ${r.percentage.toFixed(0)}%
             </div>
         </div>
     `).join('');
-}
-
-function apiFetch(url, method='GET', body=null) {
-    return fetch(url, {
-        method,
-        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-        body: body ? JSON.stringify(body) : null,
-    });
 }
 
 // Init

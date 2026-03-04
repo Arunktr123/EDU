@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>{% block title %}SUPERNATURAL{% endblock %}</title>
-    <link rel="stylesheet" href="/static/css/style.css" />
+    <link rel="stylesheet" href="/static/css/style.css?v=2" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
 </head>
@@ -17,12 +17,12 @@
         </div>
         <div class="nav-links" id="nav-links">
             <a href="/" class="nav-link">Home</a>
-            <a href="/dashboard" class="nav-link">Dashboard</a>
+            <a href="/dashboard" class="nav-link" id="dashboard-link" style="display:none;">Dashboard</a>
             <a href="#" class="nav-link" id="logout-btn" style="display:none;">Logout</a>
         </div>
         <div class="nav-auth" id="nav-auth">
-            <a href="/login" class="btn btn-outline">Login</a>
-            <a href="/register" class="btn btn-primary">Get Started</a>
+            <a href="/login" class="btn btn-outline btn-sm">Login</a>
+            <a href="/register" class="btn btn-coral btn-sm">Get Started →</a>
         </div>
     </nav>
 

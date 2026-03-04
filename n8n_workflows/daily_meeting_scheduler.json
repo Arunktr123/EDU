@@ -21,7 +21,7 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "https://YOUR_BACKEND_URL/api/webhooks/send-daily-meets",
+        "url": "https://supernatural-api-pok3.onrender.com/api/webhooks/send-daily-meets",
         "authentication": "genericCredentialType",
         "genericAuthType": "httpHeaderAuth",
         "options": {}
@@ -100,7 +100,7 @@
     {
       "parameters": {
         "method": "GET",
-        "url": "https://YOUR_BACKEND_URL/api/sessions",
+        "url": "https://supernatural-api-pok3.onrender.com/api/sessions",
         "authentication": "genericCredentialType",
         "genericAuthType": "httpHeaderAuth",
         "options": {}

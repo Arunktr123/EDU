@@ -13,11 +13,13 @@ const token = localStorage.getItem('token');
 const role  = localStorage.getItem('role');
 
 if (token) {
-    // Hide login/register, show logout
+    // Hide login/register, show logout + dashboard
     const navAuth = document.getElementById('nav-auth');
     const logoutBtn = document.getElementById('logout-btn');
+    const dashLink = document.getElementById('dashboard-link');
     if (navAuth)   navAuth.style.display = 'none';
     if (logoutBtn) logoutBtn.style.display = 'inline';
+    if (dashLink)  dashLink.style.display = 'inline';
 }
 
 document.getElementById('logout-btn')?.addEventListener('click', () => {

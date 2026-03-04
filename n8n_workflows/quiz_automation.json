@@ -27,7 +27,7 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "https://YOUR_BACKEND_URL/api/webhooks/generate-quiz",
+        "url": "https://supernatural-api-pok3.onrender.com/api/webhooks/generate-quiz",
         "authentication": "genericCredentialType",
         "genericAuthType": "httpHeaderAuth",
         "sendBody": true,
@@ -83,7 +83,7 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "https://YOUR_BACKEND_URL/api/webhooks/send-quiz-reminders",
+        "url": "https://supernatural-api-pok3.onrender.com/api/webhooks/send-quiz-reminders",
         "authentication": "genericCredentialType",
         "genericAuthType": "httpHeaderAuth",
         "options": {}

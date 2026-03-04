@@ -21,7 +21,7 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "https://YOUR_BACKEND_URL/api/webhooks/trigger-matching",
+        "url": "https://supernatural-api-pok3.onrender.com/api/webhooks/trigger-matching",
         "authentication": "genericCredentialType",
         "genericAuthType": "httpHeaderAuth",
         "options": {}

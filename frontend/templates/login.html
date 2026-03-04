@@ -1,0 +1,80 @@
+{% extends "base.html" %}
+{% block title %}Login | SUPERNATURAL{% endblock %}
+
+{% block content %}
+<div class="onboarding-container">
+    <div class="onboarding-card" style="max-width:440px;">
+        <div class="onboarding-header">
+            <div class="onboarding-icon">🔐</div>
+            <h1>Welcome Back</h1>
+            <p>Login to your SUPERNATURAL account</p>
+        </div>
+
+        <form id="login-form">
+            <div class="form-group">
+                <label>Email</label>
+                <input type="email" id="login-email" placeholder="you@example.com" required />
+            </div>
+            <div class="form-group">
+                <label>Password</label>
+                <input type="password" id="login-password" placeholder="••••••••" required />
+            </div>
+
+            <div id="login-error" class="alert alert-error" style="display:none;"></div>
+
+            <button type="submit" class="btn btn-coral btn-lg btn-full" style="margin-top:8px;">
+                Login ⚡
+            </button>
+        </form>
+
+        <div style="text-align:center;margin-top:24px;font-size:.88rem;color:var(--text-muted);">
+            Don't have an account?
+            <a href="/register?role=student" style="color:var(--primary);text-decoration:none;font-weight:500;">Join as Student</a> or
+            <a href="/register?role=mentor" style="color:var(--accent);text-decoration:none;font-weight:500;">Become a Mentor</a>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.getElementById('login-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const errBox = document.getElementById('login-error');
+    errBox.style.display = 'none';
+
+    const email    = document.getElementById('login-email').value.trim();
+    const password = document.getElementById('login-password').value;
+
+    if (!email || !password) {
+        errBox.textContent = 'Please fill in both fields.';
+        errBox.style.display = 'block';
+        return;
+    }
+
+    try {
+        const form = new FormData();
+        form.append('username', email);
+        form.append('password', password);
+
+        const res = await fetch('/api/auth/login', { method: 'POST', body: form });
+
+        if (!res.ok) {
+            const data = await res.json().catch(() => ({}));
+            errBox.textContent = data.detail || 'Invalid email or password.';
+            errBox.style.display = 'block';
+            return;
+        }
+
+        const data = await res.json();
+        localStorage.setItem('token', data.access_token);
+        localStorage.setItem('role', data.role);
+
+        window.location.href = '/dashboard';
+    } catch (err) {
+        errBox.textContent = 'Network error. Please try again.';
+        errBox.style.display = 'block';
+    }
+});
+</script>
+{% endblock %}
