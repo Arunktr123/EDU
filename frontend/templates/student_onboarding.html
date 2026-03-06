@@ -7,14 +7,30 @@
         <div class="onboarding-header">
             <div class="onboarding-icon">🎓</div>
             <h1>Student Onboarding</h1>
-            <p>Tell us your preferences. AI will match you with the perfect mentor automatically.</p>
+            <p>Tell us your preferences. AI will match you with the perfect mentor.</p>
+        </div>
+
+        <!-- Progress Indicator -->
+        <div class="wizard-progress">
+            <div class="wizard-step">
+                <div class="wizard-dot active" id="dot-1">1<span class="wizard-label">Account</span></div>
+            </div>
+            <div class="wizard-line" id="line-1"></div>
+            <div class="wizard-step">
+                <div class="wizard-dot" id="dot-2">2<span class="wizard-label">Subjects</span></div>
+            </div>
+            <div class="wizard-line" id="line-2"></div>
+            <div class="wizard-step">
+                <div class="wizard-dot" id="dot-3">3<span class="wizard-label">Schedule</span></div>
+            </div>
         </div>
 
         <form id="student-form" class="pref-form">
-            <!-- Personal Info -->
-            <div class="form-section">
-                <h3>📋 Basic Information</h3>
-                <div class="form-row">
+
+            <!-- ═══ PAGE 1: Account Info ═══ -->
+            <div class="wizard-page active" id="page-1">
+                <div class="form-section">
+                    <h3>📋 Create Your Account</h3>
                     <div class="form-group">
                         <label>Full Name</label>
                         <input type="text" id="full_name" name="full_name" placeholder="Your full name" required />
@@ -23,97 +39,109 @@
                         <label>Email</label>
                         <input type="email" id="email" name="email" placeholder="your@email.com" required />
                     </div>
-                </div>
-                <div class="form-row">
                     <div class="form-group">
                         <label>Password</label>
-                        <input type="password" id="password" name="password" placeholder="Create password" required />
+                        <input type="password" id="password" name="password" placeholder="Create a strong password" required />
                     </div>
+                </div>
+                <div class="wizard-nav">
+                    <div></div>
+                    <button type="button" class="btn btn-coral" onclick="goToPage(2)">Next → Subjects</button>
                 </div>
             </div>
 
-            <!-- Learning Preferences -->
-            <div class="form-section">
-                <h3>📚 Learning Preferences</h3>
-
-                <div class="form-group">
-                    <label>Subjects You Want to Learn</label>
-                    <div class="chip-selector" id="subjects">
-                        <div class="chip" data-value="Python">Python</div>
-                        <div class="chip" data-value="Machine Learning">Machine Learning</div>
-                        <div class="chip" data-value="Data Science">Data Science</div>
-                        <div class="chip" data-value="Web Development">Web Development</div>
-                        <div class="chip" data-value="JavaScript">JavaScript</div>
-                        <div class="chip" data-value="Deep Learning">Deep Learning</div>
-                        <div class="chip" data-value="Cloud Computing">Cloud Computing</div>
-                        <div class="chip" data-value="DevOps">DevOps</div>
+            <!-- ═══ PAGE 2: Subjects & Style ═══ -->
+            <div class="wizard-page" id="page-2">
+                <div class="form-section">
+                    <h3>📚 What Do You Want to Learn?</h3>
+                    <div class="form-group">
+                        <label>Select Subjects</label>
+                        <div class="chip-selector" id="subjects">
+                            <div class="chip" data-value="Python">Python</div>
+                            <div class="chip" data-value="Machine Learning">Machine Learning</div>
+                            <div class="chip" data-value="Data Science">Data Science</div>
+                            <div class="chip" data-value="Web Development">Web Development</div>
+                            <div class="chip" data-value="JavaScript">JavaScript</div>
+                            <div class="chip" data-value="Deep Learning">Deep Learning</div>
+                            <div class="chip" data-value="Cloud Computing">Cloud Computing</div>
+                            <div class="chip" data-value="DevOps">DevOps</div>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Current Level</label>
+                            <select id="current_level" name="current_level">
+                                <option value="beginner">🌱 Beginner</option>
+                                <option value="intermediate" selected>📈 Intermediate</option>
+                                <option value="advanced">🚀 Advanced</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Learning Style</label>
+                            <select id="learning_style" name="learning_style">
+                                <option value="interactive" selected>💬 Interactive</option>
+                                <option value="lecture">📖 Lecture-based</option>
+                                <option value="project-based">🛠 Project-based</option>
+                            </select>
+                        </div>
                     </div>
                 </div>
-
-                <div class="form-row">
-                    <div class="form-group">
-                        <label>Current Level</label>
-                        <select id="current_level" name="current_level">
-                            <option value="beginner">🌱 Beginner</option>
-                            <option value="intermediate" selected>📈 Intermediate</option>
-                            <option value="advanced">🚀 Advanced</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label>Learning Style</label>
-                        <select id="learning_style" name="learning_style">
-                            <option value="interactive" selected>💬 Interactive</option>
-                            <option value="lecture">📖 Lecture-based</option>
-                            <option value="project-based">🛠 Project-based</option>
-                        </select>
-                    </div>
-                </div>
-
-                <div class="form-row">
-                    <div class="form-group">
-                        <label>Preferred Class Time</label>
-                        <select id="preferred_time" name="preferred_time">
-                            <option value="morning">🌅 Morning (6AM–12PM)</option>
-                            <option value="afternoon">☀️ Afternoon (12PM–6PM)</option>
-                            <option value="evening" selected>🌙 Evening (6PM–10PM)</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label>Language</label>
-                        <select id="language" name="language">
-                            <option value="English" selected>🇬🇧 English</option>
-                            <option value="Tamil">Tamil</option>
-                            <option value="Hindi">Hindi</option>
-                        </select>
-                    </div>
-                </div>
-
-                <div class="form-group">
-                    <label>Available Days</label>
-                    <div class="chip-selector" id="available_days">
-                        <div class="chip" data-value="Monday">Mon</div>
-                        <div class="chip" data-value="Tuesday">Tue</div>
-                        <div class="chip" data-value="Wednesday">Wed</div>
-                        <div class="chip" data-value="Thursday">Thu</div>
-                        <div class="chip" data-value="Friday">Fri</div>
-                        <div class="chip" data-value="Saturday">Sat</div>
-                        <div class="chip" data-value="Sunday">Sun</div>
-                    </div>
-                </div>
-
-                <div class="form-group">
-                    <label>Learning Goals (optional)</label>
-                    <textarea id="learning_goals" name="learning_goals" rows="3"
-                        placeholder="Describe what you want to achieve..."></textarea>
+                <div class="wizard-nav">
+                    <button type="button" class="btn btn-outline" onclick="goToPage(1)">← Back</button>
+                    <button type="button" class="btn btn-coral" onclick="goToPage(3)">Next → Schedule</button>
                 </div>
             </div>
 
-            <div id="form-error" class="alert alert-error" style="display:none;"></div>
-            <div id="form-success" class="alert alert-success" style="display:none;"></div>
+            <!-- ═══ PAGE 3: Schedule & Goals ═══ -->
+            <div class="wizard-page" id="page-3">
+                <div class="form-section">
+                    <h3>📅 Your Availability</h3>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Preferred Class Time</label>
+                            <select id="preferred_time" name="preferred_time">
+                                <option value="morning">🌅 Morning (6AM–12PM)</option>
+                                <option value="afternoon">☀️ Afternoon (12PM–6PM)</option>
+                                <option value="evening" selected>🌙 Evening (6PM–10PM)</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Language</label>
+                            <select id="language" name="language">
+                                <option value="English" selected>🇬🇧 English</option>
+                                <option value="Tamil">Tamil</option>
+                                <option value="Hindi">Hindi</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Available Days</label>
+                        <div class="chip-selector" id="available_days">
+                            <div class="chip" data-value="Monday">Mon</div>
+                            <div class="chip" data-value="Tuesday">Tue</div>
+                            <div class="chip" data-value="Wednesday">Wed</div>
+                            <div class="chip" data-value="Thursday">Thu</div>
+                            <div class="chip" data-value="Friday">Fri</div>
+                            <div class="chip" data-value="Saturday">Sat</div>
+                            <div class="chip" data-value="Sunday">Sun</div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Learning Goals (optional)</label>
+                        <textarea id="learning_goals" name="learning_goals" rows="3"
+                            placeholder="Describe what you want to achieve..."></textarea>
+                    </div>
+                </div>
 
-            <button type="submit" class="btn btn-coral btn-full btn-lg">
-                🚀 Register & Start AI Matching
-            </button>
+                <div id="form-error" class="alert alert-error" style="display:none;"></div>
+                <div id="form-success" class="alert alert-success" style="display:none;"></div>
+
+                <div class="wizard-nav">
+                    <button type="button" class="btn btn-outline" onclick="goToPage(2)">← Back</button>
+                    <button type="submit" class="btn btn-coral btn-lg">🚀 Register & Start AI Matching</button>
+                </div>
+            </div>
+
         </form>
     </div>
 </div>
@@ -121,9 +149,53 @@
 
 {% block scripts %}
 <script>
+const totalPages = 3;
+let currentPage = 1;
+
+function goToPage(page) {
+    // Validate before moving forward
+    if (page > currentPage) {
+        if (currentPage === 1) {
+            const name = document.getElementById('full_name').value.trim();
+            const email = document.getElementById('email').value.trim();
+            const pass = document.getElementById('password').value;
+            if (!name || !email || !pass) { alert('Please fill in all account fields.'); return; }
+            if (pass.length < 4) { alert('Password must be at least 4 characters.'); return; }
+        }
+        if (currentPage === 2) {
+            const subjects = document.querySelectorAll('#subjects .chip.active');
+            if (!subjects.length) { alert('Please select at least one subject.'); return; }
+        }
+    }
+
+    // Hide all pages, show target
+    document.querySelectorAll('.wizard-page').forEach(p => p.classList.remove('active'));
+    document.getElementById('page-' + page).classList.add('active');
+
+    // Update dots
+    for (let i = 1; i <= totalPages; i++) {
+        const dot = document.getElementById('dot-' + i);
+        dot.classList.remove('active', 'done');
+        if (i < page) dot.classList.add('done');
+        else if (i === page) dot.classList.add('active');
+    }
+    // Update lines
+    for (let i = 1; i < totalPages; i++) {
+        const line = document.getElementById('line-' + i);
+        line.classList.toggle('done', i < page);
+    }
+
+    currentPage = page;
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+// Form submit
 document.getElementById('student-form').addEventListener('submit', async (e) => {
     e.preventDefault();
     const form = e.target;
+    const errBox = document.getElementById('form-error');
+    const successBox = document.getElementById('form-success');
+    errBox.style.display = 'none';
 
     const subjects = [...document.querySelectorAll('#subjects .chip.active')].map(c => c.dataset.value);
     const days = [...document.querySelectorAll('#available_days .chip.active')].map(c => c.dataset.value);
@@ -142,8 +214,8 @@ document.getElementById('student-form').addEventListener('submit', async (e) => 
 
     if (!regRes.ok) {
         const err = await regRes.json();
-        document.getElementById('form-error').textContent = err.detail;
-        document.getElementById('form-error').style.display = 'block';
+        errBox.textContent = err.detail || 'Registration failed.';
+        errBox.style.display = 'block';
         return;
     }
 
@@ -156,7 +228,7 @@ document.getElementById('student-form').addEventListener('submit', async (e) => 
     localStorage.setItem('token', loginData.access_token);
     localStorage.setItem('role', loginData.role);
 
-    // Step 3: Save preferences (triggers auto-matching)
+    // Step 3: Save preferences
     await fetch('/api/students/preferences', {
         method: 'PUT',
         headers: {
@@ -174,8 +246,8 @@ document.getElementById('student-form').addEventListener('submit', async (e) => 
         })
     });
 
-    document.getElementById('form-success').textContent = '✅ Registered! AI is finding your best mentor...';
-    document.getElementById('form-success').style.display = 'block';
+    successBox.textContent = '✅ Registered! AI is finding your best mentor...';
+    successBox.style.display = 'block';
     setTimeout(() => window.location.href = '/dashboard', 2000);
 });
 </script>
