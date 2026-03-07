@@ -35,3 +35,4 @@ class Student(Base):
     user             = relationship("User",    back_populates="student_profile")
     assigned_mentor  = relationship("Mentor",  back_populates="students")
     quiz_results     = relationship("QuizResult", back_populates="student")
+

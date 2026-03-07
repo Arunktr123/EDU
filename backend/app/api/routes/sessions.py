@@ -168,3 +168,4 @@ def resend_meet_link(
             mentor_name=mentor.user.full_name if mentor else "Mentor",
         )
     return {"message": "Meet link re-sent successfully", "recipients": session.attendees}
+

@@ -186,3 +186,4 @@ class EmailService:
             f"📊 Quiz Results: {quiz_title} | SUPERNATURAL",
             html,
         )
+

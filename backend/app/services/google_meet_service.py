@@ -170,3 +170,4 @@ class GoogleMeetService:
             logger.info(f"Deleted event: {event_id}")
         except Exception as e:
             logger.error(f"Failed to delete event {event_id}: {e}")
+

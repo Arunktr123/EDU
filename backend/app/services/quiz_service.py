@@ -163,3 +163,4 @@ class QuizService:
             f"✅ Quiz result for student {student_id}: {percentage:.1f}% — email sent"
         )
         return result
+

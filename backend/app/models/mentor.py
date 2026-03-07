@@ -34,3 +34,4 @@ class Mentor(Base):
     user        = relationship("User",         back_populates="mentor_profile")
     students    = relationship("Student",      back_populates="assigned_mentor")
     sessions    = relationship("ClassSession", back_populates="mentor")
+

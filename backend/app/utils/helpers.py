@@ -18,3 +18,4 @@ def get_grade_label(percentage: float) -> str:
     if percentage >= 60: return "C  — Average 📚"
     if percentage >= 50: return "D  — Below Average 💪"
     return "F  — Needs Improvement 🔄"
+

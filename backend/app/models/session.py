@@ -38,3 +38,4 @@ class ClassSession(Base):
     # ── Relationships ──────────────────────────────────────────────────────
     mentor  = relationship("Mentor", back_populates="sessions")
     quizzes = relationship("Quiz",   back_populates="session")
+

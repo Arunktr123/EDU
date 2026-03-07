@@ -144,3 +144,4 @@ class MatchingService:
             result = self.assign_mentor(student.id)
             results.append(result)
         return {"total_processed": len(results), "results": results}
+

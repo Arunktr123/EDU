@@ -125,3 +125,4 @@ def get_quiz_history(
         }
         for r in results
     ]
+

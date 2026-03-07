@@ -58,3 +58,4 @@ class QuizResult(Base):
     # ── Relationships ──────────────────────────────────────────────────────
     quiz    = relationship("Quiz",    back_populates="results")
     student = relationship("Student", back_populates="quiz_results")
+

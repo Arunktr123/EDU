@@ -53,3 +53,4 @@ services:
         sync: false
       - key: OPENAI_MODEL
         value: gpt-4o
+

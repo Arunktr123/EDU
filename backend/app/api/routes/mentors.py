@@ -109,3 +109,4 @@ def trigger_batch_matching(
     service = MatchingService(db)
     result = service.run_batch_matching()
     return result
+
